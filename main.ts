@@ -161,14 +161,14 @@ export default class QuickLatexPlugin extends Plugin {
 
 					// check for custom shorthand
 					if (this.settings.customShorthand_toggle) {
-						const start:number = current_line.substring(0, position.ch).search(/[^a-zA-Z]?[a-zA-Z]*$/); // Find nonletter that has letters until the end
+						const start:number = current_line.substring(0, position.ch).search(/[^a-zA-Z]?[a-zA-Z]*$/); // Find optional nonletter that has letters until the cursor
 						let keyword:string = editor.getRange(
 							{line: position.line, ch: start},
 							{line: position.line, ch: position.ch}
 						);
-						keyword = keyword[0].match(/[a-zA-Z]/) ? "@" + keyword : keyword; // @ placeholder for later
+						keyword = keyword[0].match(/[a-zA-Z]/) ? "@" + keyword : keyword; // @ is a placeholder for later
 						for(let shorthand of this.shorthand_array) {
-							if(keyword.slice(1) == shorthand[0] && shorthand[1] != keyword) {
+							if(keyword.slice(1) == shorthand[0] && shorthand[1] != keyword) { //
 								const replace_slash = (keyword[0]=="\\" && shorthand[1][0]=="\\") ? 1 : 0;
 								editor.replaceRange(shorthand[1],
 									{line: position.line, ch: position.ch - shorthand[0].length - replace_slash},
