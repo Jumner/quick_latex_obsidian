@@ -179,7 +179,7 @@ export default class QuickLatexPlugin extends Plugin {
 										line: position.line,
 										ch: position.ch + shorthand[1].length - shorthand[0].length - 1 - replace_slash
 									});
-								} else return false;
+								}
 								return true;
 							}
 						}
