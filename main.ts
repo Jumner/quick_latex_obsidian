@@ -161,12 +161,14 @@ export default class QuickLatexPlugin extends Plugin {
 
 					// check for custom shorthand
 					if (this.settings.customShorthand_toggle) {
-						const keyword = editor.wordAt({
-							line: position.line,
-							ch: position.ch
-						});
+						let start:number = current_line.substring(0, position.ch).search(/[^a-zA-Z]?[a-zA-Z]*$/); // Find nonletter that has letters until the end
+						let keyword:string = editor.getRange(
+							{line: position.line, ch: start},
+							{line: position.line, ch: position.ch}
+						);
+						keyword = keyword[0].match(/[a-zA-Z]/) ? "@" + keyword : keyword;
 						this.shorthand_array.forEach(shorthand => {
-							if(keyword == shorthand[0] && shorthand[1] != keyword) {
+							if(keyword.slice(1) == shorthand[0] && shorthand[1] != keyword) {
 								const replace_slash = (keyword[0]=="\\" && shorthand[1][0]=="\\") ? 1 : 0;
 								editor.replaceRange(shorthand[1],
 									{line: position.line, ch: position.ch - shorthand[0].length - replace_slash},
@@ -181,29 +183,6 @@ export default class QuickLatexPlugin extends Plugin {
 								return true;
 							}
 						});
-						if (keyword[0].toLowerCase() == keyword[0].toUpperCase() || 
-							keyword[0] == "@" ) {
-							for (let i = 0 ; i < this.shorthand_array.length ; i++) {
-								if (this.shorthand_array[i][0] == keyword.slice(-2) && 
-									this.shorthand_array[i][1] != keyword) {
-									const replace_slash = (keyword[0]=="\\" && this.shorthand_array[i][1][0]=="\\") ? 1 : 0;
-									if (this.shorthand_array[i][1].slice(-2) == "{}") {
-										editor.replaceRange(this.shorthand_array[i][1],
-											{ line: position.line, ch: position.ch - 2 - replace_slash },
-											{ line: position.line, ch: position.ch });
-										editor.setCursor(
-											{ line: position.line, 
-											ch: position.ch + this.shorthand_array[i][1].length - 3 - replace_slash}
-											);
-									} else {
-										editor.replaceRange(this.shorthand_array[i][1],
-											{ line: position.line, ch: position.ch - 2 - replace_slash },
-											{ line: position.line, ch: position.ch });
-									}									
-									return true;
-								};
-							};
-						}
 					};
 
 					// find last unbracketed subscript within last 10 characters and perform autoEncloseSub
@@ -1521,7 +1500,7 @@ class QuickLatexSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Custom Shorthand')
-			.setDesc('Use two-letters custom shorthand for common latex strings. '+
+			.setDesc('Use custom shorthand for common latex strings. '+
 			'Eg, typing "al" followed by "space" key will replace with "\\alpha"')
 			.addToggle((toggle) => toggle
 				.setValue(this.plugin.settings.customShorthand_toggle)
@@ -1533,7 +1512,7 @@ class QuickLatexSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Custom Shorthand Parameter')
-			.setDesc('Separate the two-letters shorthand and the string with ":" ;'+
+			.setDesc('Separate the shorthand (no longer just 2 characters) and the string with ":" ;'+
 			'Separate each set of shorthands with ","; '+
 			'For Expression that ends with "{}", cursor will automatically be placed within the bracket.')
 			.addText((text) => text
