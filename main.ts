@@ -161,16 +161,26 @@ export default class QuickLatexPlugin extends Plugin {
 
 					// check for custom shorthand
 					if (this.settings.customShorthand_toggle) {
-						let keyword:string = "";
-						if (position.ch==2) {
-							keyword = "@" + editor.getRange(
-								{ line: position.line, ch: position.ch - 2 },
-								{ line: position.line, ch: position.ch });
-						} else {
-							keyword = editor.getRange(
-								{ line: position.line, ch: position.ch - 3 },
-								{ line: position.line, ch: position.ch });
-						}
+						const keyword = editor.wordAt({
+							line: position.line,
+							ch: position.ch
+						});
+						this.shorthand_array.forEach(shorthand => {
+							if(keyword == shorthand[0] && shorthand[1] != keyword) {
+								const replace_slash = (keyword[0]=="\\" && shorthand[1][0]=="\\") ? 1 : 0;
+								editor.replaceRange(shorthand[1],
+									{line: position.line, ch: position.ch - shorthand[0].length - replace_slash},
+									{line: position.line, ch: position.ch}
+								);
+								if(shorthand[1].slice(-2) == "{}") { // Has brackets to place cursor inside
+									editor.setCursor({
+										line: position.line,
+										ch: position.ch + shorthand[1].length - shorthand[0].length - 1 - replace_slash
+									});
+								}
+								return true;
+							}
+						});
 						if (keyword[0].toLowerCase() == keyword[0].toUpperCase() || 
 							keyword[0] == "@" ) {
 							for (let i = 0 ; i < this.shorthand_array.length ; i++) {
